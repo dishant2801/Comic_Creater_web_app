@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comic Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            /* height: 100vh; */
+            /* background-color: #d2dce2; */
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        #app {
+            /* max-width: 600px; */
+            width: 50%;
+            padding: 20px;
+            /* background-color: #fff; */
+            background: linear-gradient(to bottom right, #afdad4, #ffffff);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            /* background:rgba(236, 230, 230, 0.2) ; */
+            
+        }
+
+        h1{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px 20px;
+            /* width: 250px; */
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+            text-align: center;
+            background-color: #1dab8a;
+            border-radius: 0.5;
+        }
+        
+        form {
+            display: grid;
+            gap: 10px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            background-color: #ffffff;
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.1), 0 6px 20px 0 rgba(0, 0, 0, 0.1);
+            outline:none;
+            border: 2px solid rgba(35, 123, 94, 0.5)
+        }
+
+        button {
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #comicDisplay {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        img {
+            max-width: 100%;
+            height: 512px;
+            margin-bottom: 10px;
+        }
+        .resBox{
+            display: flex;
+            padding: 1rem 0;
+            gap: 1rem;
+            width: 100%;
+        }
+        .resBoxText{
+            background-color: aliceblue;
+            padding: 0.8rem 0.5rem;
+            border-radius: 0.5rem;
+            width: 100%;
+            height: fit-content;
+        }
+        .loader {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: block;
+            margin:15px auto;
+            position: relative;
+            background: #FFF;
+            box-shadow: -24px 0 #FFF, 24px 0 #FFF;
+            box-sizing: border-box;
+            animation: shadowPulse 2s linear infinite;
+            }
+
+            @keyframes shadowPulse {
+            33% {
+                background: #FFF;
+                box-shadow: -24px 0 #FF3D00, 24px 0 #FFF;
+            }
+            66% {
+                background: #FF3D00;
+                box-shadow: -24px 0 #FFF, 24px 0 #FFF;
+            }
+            100% {
+                background: #FFF;
+                box-shadow: -24px 0 #FFF, 24px 0 #FF3D00;
+            }
+        }
+
+
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>Comic Generator</h1>
+        <form id="comicForm">
+            <!-- Inputs for Panels 1-10 -->
+            <label for="panel1">Panel 1:</label>
+            <input type="text" id="panel1" required>
+            <!-- Repeat for panels 2 to 10 -->
+            <label for="panel2">Panel 2:</label>
+            <input type="text" id="panel2" required>
+            <label for="panel3">Panel 3:</label>
+            <input type="text" id="panel3" >
+            <label for="panel4">Panel 4:</label>
+            <input type="text" id="panel4" >
+            <label for="panel5">Panel 5:</label>
+            <input type="text" id="panel5" >
+            <label for="panel6">Panel 6:</label>
+            <input type="text" id="panel6" >
+            <label for="panel7">Panel 7:</label>
+            <input type="text" id="panel7" >
+            <label for="panel8">Panel 8:</label>
+            <input type="text" id="panel8" >
+            <label for="panel9">Panel 9:</label>
+            <input type="text" id="panel9" >
+            <label for="panel10">Panel 10:</label>
+            <input type="text" id="panel10" >
+            <!-- ... -->
+
+            <button type="submit">Generate Comic</button>
+        </form>
+        <div id="loaderDisplay"></div>
+        <div id="comicDisplay"></div>
+
+    </div>
+
+    <script>
+        /**
+         * Asynchronous function to query the text-to-image API.
+         * @param {Object} data - The data to be sent to the API.
+         * @returns {Promise<Blob>} - A Promise that resolves to the API response as a Blob.
+         */
+        async function queryAPI(data) {
+            const response = await fetch(
+                "https://xdwvg9no7pefghrn.us-east-1.aws.endpoints.huggingface.cloud",
+                {
+                    headers: { 
+                        "Accept": "image/png",
+                        "Authorization": "Bearer VknySbLLTUjbxXAXCjyfaFIPwUTCeRXbFSOjwRiCxsxFyhbnGjSFalPKrpvvDAaPVzWEevPljilLVDBiTzfIbWFdxOkYJxnOPoHhkkVGzAknaOulWggusSFewzpqsNWM", 
+                        "Content-Type": "application/json" 
+                    },
+                    method: "POST",
+                    body: JSON.stringify(data),
+                }
+            );
+            console.log(response);
+            const result = await response.blob();
+            return result;
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('comicForm');
+            const comicDisplay = document.getElementById('comicDisplay');
+            const comicData = {};
+
+            form.addEventListener('submit', async function (event) {
+                event.preventDefault();
+
+                const formData = new FormData(form);
+                
+                // Populate comicData with inputs for each panel
+                for (let i = 1; i <= 10; i++) {
+                    // comicData[`panel${i}`] = formData.get(`panel${i}`);
+                    comicData[`panel${i}`] = document.getElementById(`panel${i}`).value;
+                }
+
+                try {
+                    const loaderDisplay = document.getElementById('loaderDisplay');
+                    const load = document.createElement('div');
+                    load.classList.add('loader');
+                    loaderDisplay.appendChild(load);
+                    // Generate images for each panel
+                    for (let i = 1; i <= 10; i++) {
+                        const imageBlob = await queryAPI({ "inputs": comicData[`panel${i}`] });
+                        const imageUrl = URL.createObjectURL(imageBlob);
+
+                        // Display the generated comic image
+                        const container = document.createElement('div');
+                        const textBox =  document.createElement('div');
+                        const imgElement = document.createElement('img');
+                        imgElement.src = imageUrl;
+                        imgElement.alt = `Generated Comic Panel ${i}`;
+
+                        comicDisplay.appendChild(container);
+                        container.appendChild(imgElement);
+                        container.appendChild(textBox);
+
+                        textBox.innerHTML = comicData[`panel${i}`] ;
+                        container.classList.add('resBox');
+                        textBox.classList.add('resBoxText');
+
+                    }
+                    loaderDisplay.removeChild(load);
+                } catch (error) {
+                    console.error('Error generating comic:', error);
+                    comicDisplay.innerHTML = 'Error generating comic. Please try again.';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
